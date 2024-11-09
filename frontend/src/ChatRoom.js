@@ -6,17 +6,15 @@ import './ChatRoom.css';
 function ChatRoom() {
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState('');
-    const [connected, setConnected] = useState(false); // Bağlı olup olmadığını takip etmek için
+    const [connecting, setConnecting] = useState(true);
     const stompClient = useRef(null);
+    const messageAreaRef = useRef(null);
 
-    // localStorage'dan email alınıyor
     const email = localStorage.getItem('email');
 
     useEffect(() => {
         connect();
-
-        // Sekme değişikliklerini izliyoruz
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('beforeunload', handleLeave);
 
         return () => {
             handleLeave();
@@ -25,7 +23,7 @@ function ChatRoom() {
                     console.log("Disconnected from WebSocket");
                 });
             }
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleLeave);
         };
     }, []);
 
@@ -39,26 +37,22 @@ function ChatRoom() {
         if (stompClient.current && stompClient.current.connected) {
             stompClient.current.subscribe('/topic/public', onMessageReceived);
 
-            // Bağlantı durumunu güncelle
-            setConnected(true);
+            const token = localStorage.getItem('token');
+            stompClient.current.send(
+                "/app/addUser",
+                { Authorization: `Bearer ${token}` },
+                JSON.stringify({ sender: email, type: 'JOIN' })
+            );
 
-            // Sadece bağlantı ilk defa sağlandığında JOIN mesajı gönder
-            if (!connected) {
-                const token = localStorage.getItem('token');
-                stompClient.current.send(
-                    "/app/addUser",
-                    { Authorization: `Bearer ${token}` },
-                    JSON.stringify({ sender: email, type: 'JOIN' })
-                );
-            }
+            setConnecting(false);
         }
     };
 
     const onError = (error) => {
         console.error('WebSocket bağlantı hatası:', error);
+        setConnecting(true);
     };
 
-    // Kullanıcı sayfayı kapattığında "LEAVE" mesajı gönderme
     const handleLeave = () => {
         const token = localStorage.getItem('token');
         if (stompClient.current && stompClient.current.connected) {
@@ -67,16 +61,6 @@ function ChatRoom() {
                 { Authorization: `Bearer ${token}` },
                 JSON.stringify({ sender: email, type: 'LEAVE' })
             );
-            setConnected(false); // Bağlantıyı false yap
-        }
-    };
-
-    // Sekme görünürlük değiştiğinde işlem yapma
-    const handleVisibilityChange = () => {
-        if (document.visibilityState === 'hidden') {
-            handleLeave();
-        } else if (document.visibilityState === 'visible' && !connected) {
-            connect();
         }
     };
 
@@ -103,18 +87,25 @@ function ChatRoom() {
         setMessages((prevMessages) => [...prevMessages, message]);
     };
 
+    useEffect(() => {
+        if (messageAreaRef.current) {
+            messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
+
     return (
         <div className="chat-wrapper">
-            <div className="chat-page">
-                <div className="chat-container">
+            <div className="row col-12 chat-page">
+                <div className="col-8 chat-container">
                     <div className="chat-header">
-                        <h2>Welcome to Chat Room</h2>
+                        <h2>Sohbet Odasına Hoş geldin</h2>
                     </div>
-                    <ul className="message-area">
+                    {connecting && <div className="connecting">Bağlanıyor...</div>}
+                    <ul className="message-area" ref={messageAreaRef}>
                         {messages.map((msg, index) => (
                             <li key={index} className={`message ${msg.type}`}>
-                                {msg.type === 'JOIN' && <em style={{ color: 'green' }}>{msg.sender} joined the chat</em>}
-                                {msg.type === 'LEAVE' && <em style={{ color: 'red' }}>{msg.sender} left the chat</em>}
+                                {msg.type === 'JOIN' && <em>{msg.sender} joined the chat</em>}
+                                {msg.type === 'LEAVE' && <em>{msg.sender} left the chat</em>}
                                 {msg.type === 'CHAT' && <span><strong>{msg.sender}</strong>: {msg.content}</span>}
                             </li>
                         ))}
