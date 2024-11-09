@@ -27,6 +27,12 @@ function ChatRoom() {
         };
     }, []);
 
+    useEffect(() => {
+        if (messageAreaRef.current) {
+            messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
+
     const connect = () => {
         const socket = new SockJS('http://localhost:8080/ws');
         stompClient.current = Stomp.over(socket);
@@ -38,7 +44,7 @@ function ChatRoom() {
             stompClient.current.subscribe('/topic/public', onMessageReceived);
 
             const token = localStorage.getItem('token');
-            stompClient.current.send(
+            stompClient.current.send    (
                 "/app/addUser",
                 { Authorization: `Bearer ${token}` },
                 JSON.stringify({ sender: email, type: 'JOIN' })
@@ -72,6 +78,7 @@ function ChatRoom() {
                 content: message,
                 type: 'CHAT',
             };
+
             const token = localStorage.getItem('token');
             stompClient.current.send(
                 "/app/sendMessage",
@@ -86,12 +93,6 @@ function ChatRoom() {
         const message = JSON.parse(payload.body);
         setMessages((prevMessages) => [...prevMessages, message]);
     };
-
-    useEffect(() => {
-        if (messageAreaRef.current) {
-            messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
-        }
-    }, [messages]);
 
     return (
         <div className="chat-wrapper">
