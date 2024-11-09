@@ -94,6 +94,12 @@ function ChatRoom() {
         setMessages((prevMessages) => [...prevMessages, message]);
     };
 
+    const formatDate = (time) => {
+        const date = new Date(time);
+        return date.toLocaleString();
+    };
+
+
     return (
         <div className="chat-wrapper">
             <div className="row col-12 chat-page">
@@ -107,7 +113,14 @@ function ChatRoom() {
                             <li key={index} className={`message ${msg.type}`}>
                                 {msg.type === 'JOIN' && <em>{msg.sender} joined the chat</em>}
                                 {msg.type === 'LEAVE' && <em>{msg.sender} left the chat</em>}
-                                {msg.type === 'CHAT' && <span><strong>{msg.sender}</strong>: {msg.content}</span>}
+                                {msg.type === 'CHAT' && (
+                                    <span>
+                                        <strong>{msg.sender}</strong>: {msg.content}
+                                        <div className="timestamp">
+                                            {formatDate(msg.time)}
+                                        </div>
+                                    </span>
+                                )}
                             </li>
                         ))}
                     </ul>
