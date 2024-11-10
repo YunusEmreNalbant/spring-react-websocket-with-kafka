@@ -15,16 +15,9 @@ function ChatRoom() {
 
     useEffect(() => {
         connect();
-        window.addEventListener('beforeunload', handleLeave);
 
         return () => {
             handleLeave();
-            if (stompClient.current) {
-                stompClient.current.disconnect(() => {
-                    console.log("Disconnected from WebSocket");
-                });
-            }
-            window.removeEventListener('beforeunload', handleLeave);
         };
     }, []);
 
@@ -63,6 +56,8 @@ function ChatRoom() {
     const handleLeave = () => {
         const token = localStorage.getItem('token');
         if (stompClient.current && stompClient.current.connected) {
+            console.log("Disconnected from WebSocket");
+
             stompClient.current.send(
                 "/app/sendMessage",
                 { Authorization: `Bearer ${token}` },
@@ -126,33 +121,33 @@ function ChatRoom() {
         }
     };
 
-
     return (
         <div className="chat-wrapper">
-            <div className="row col-12 chat-page">
+            <div className="row col-12 justify-content-center chat-page">
                 <div className="col-8 chat-container">
                     <div className="d-flex justify-content-between">
                         <div className="chat-header">
                             <h2>Sohbet Odasına Hoş geldin</h2>
                         </div>
-                       <div>
-                           <Button type={"button"} className={"btn btn-danger btn-sm"} onClick={handleLogout}>Cıkıs Yap</Button>
-                       </div>
+                        <div>
+                            <Button type={"button"} className={"btn btn-danger btn-sm"} onClick={handleLogout}>Cıkıs
+                                Yap</Button>
+                        </div>
                     </div>
 
                     {connecting && <div className="connecting">Bağlanıyor...</div>}
                     <ul className="message-area" ref={messageAreaRef}>
                         {messages.map((msg, index) => (
-                            <li key={index} className={`message ${msg.type}`}>
+                            <li key={index} className={`message ${msg.type} ${msg.sender === email ? 'self' : ''}`}>
                                 {msg.type === 'JOIN' && <em>{msg.sender} joined the chat</em>}
                                 {msg.type === 'LEAVE' && <em>{msg.sender} left the chat</em>}
                                 {msg.type === 'CHAT' && (
                                     <span>
-                                        <strong>{msg.sender}</strong>: {msg.content}
+                    <strong>{msg.sender}</strong>: {msg.content}
                                         <div className="timestamp">
-                                            {formatDate(msg.time)}
-                                        </div>
-                                    </span>
+                        {formatDate(msg.time)}
+                    </div>
+                </span>
                                 )}
                             </li>
                         ))}
