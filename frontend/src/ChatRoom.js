@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './ChatRoom.css';
+import {Button} from "react-bootstrap";
 
 function ChatRoom() {
     const [messages, setMessages] = useState([]);
@@ -99,14 +100,46 @@ function ChatRoom() {
         return date.toLocaleString();
     };
 
+    const handleLogout = async () => {
+        stompClient.current.disconnect(() => {
+            console.log("Disconnected from WebSocket");
+        });
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+
+            if (response.ok) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('email');
+                window.location.href = '/login';
+            } else {
+                alert('Çıkış başarısız!');
+            }
+        } catch (error) {
+            console.error('Logout isteğinde bir hata oluştu:', error);
+        }
+    };
+
 
     return (
         <div className="chat-wrapper">
             <div className="row col-12 chat-page">
                 <div className="col-8 chat-container">
-                    <div className="chat-header">
-                        <h2>Sohbet Odasına Hoş geldin</h2>
+                    <div className="d-flex justify-content-between">
+                        <div className="chat-header">
+                            <h2>Sohbet Odasına Hoş geldin</h2>
+                        </div>
+                       <div>
+                           <Button type={"button"} className={"btn btn-danger btn-sm"} onClick={handleLogout}>Cıkıs Yap</Button>
+                       </div>
                     </div>
+
                     {connecting && <div className="connecting">Bağlanıyor...</div>}
                     <ul className="message-area" ref={messageAreaRef}>
                         {messages.map((msg, index) => (
