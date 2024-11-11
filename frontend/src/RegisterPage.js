@@ -3,22 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import './RegisterPage.css';
 
 function RegisterPage() {
-    const [firstname, setFirstname] = useState('');
-    const [lastname, setLastname] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('ROLE_MANAGER');
+    const [formData, setFormData] = useState({
+        firstname: '',
+        lastname: '',
+        email: '',
+        password: '',
+        role: 'ROLE_MANAGER'
+    });
     const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value
+        }));
+    };
 
     const handleRegister = async (e) => {
         e.preventDefault();
 
-        const newUser = { firstname, lastname, email, password, role };
         try {
             const response = await fetch('http://localhost:8080/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUser),
+                body: JSON.stringify(formData),
             });
 
             if (response.ok) {
@@ -38,33 +47,37 @@ function RegisterPage() {
                 <h2>Register</h2>
                 <input
                     type="text"
+                    name="firstname"
                     placeholder="First Name"
-                    value={firstname}
-                    onChange={(e) => setFirstname(e.target.value)}
+                    value={formData.firstname}
+                    onChange={handleChange}
                     className="form-input"
                 />
                 <input
                     type="text"
+                    name="lastname"
                     placeholder="Last Name"
-                    value={lastname}
-                    onChange={(e) => setLastname(e.target.value)}
+                    value={formData.lastname}
+                    onChange={handleChange}
                     className="form-input"
                 />
                 <input
                     type="email"
+                    name="email"
                     placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={handleChange}
                     className="form-input"
                 />
                 <input
                     type="password"
+                    name="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleChange}
                     className="form-input"
                 />
-                <button type="submit" className="register-button">Register</button>
+                <button type="submit" className="register-button">Tamamla</button>
                 <p className="redirect-text">
                     Zaten hesabınız var mı? <span onClick={() => navigate('/login')} className="login-link">Giriş yapın</span>
                 </p>

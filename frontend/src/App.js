@@ -4,29 +4,31 @@ import LoginPage from './LoginPage';
 import ChatRoom from './ChatRoom';
 import RegisterPage from "./RegisterPage";
 
+const ProtectedRoute = ({ token, children }) => {
+    return token ? children : <Navigate to="/login" replace />;
+};
+
 function App() {
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
 
     useEffect(() => {
         if (token) {
             localStorage.setItem('token', token);
+        } else {
+            localStorage.removeItem('token');
         }
     }, [token]);
-
-    const ProtectedRoute = ({ children }) => {
-        return token ? children : <Navigate to="/login" />;
-    };
 
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/login" element={<LoginPage setToken={setToken} />} />
                 <Route
                     path="/chat"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute token={token}>
                             <ChatRoom />
                         </ProtectedRoute>
                     }

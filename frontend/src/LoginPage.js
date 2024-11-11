@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 
 function LoginPage({ setToken }) {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [credentials, setCredentials] = useState({ email: '', password: '' });
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -13,10 +12,17 @@ function LoginPage({ setToken }) {
         }
     }, [navigate]);
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setCredentials((prevCredentials) => ({
+            ...prevCredentials,
+            [name]: value
+        }));
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        const credentials = { email, password };
         try {
             const response = await fetch('http://localhost:8080/api/auth/login', {
                 method: 'POST',
@@ -46,19 +52,21 @@ function LoginPage({ setToken }) {
                 <h2>Login</h2>
                 <input
                     type="text"
+                    name="email"
                     placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={credentials.email}
+                    onChange={handleChange}
                     className="form-input"
                 />
                 <input
                     type="password"
+                    name="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={credentials.password}
+                    onChange={handleChange}
                     className="form-input"
                 />
-                <button type="submit" className="login-button">Login</button>
+                <button type="submit" className="login-button">Giriş Yap</button>
                 <p className="redirect-text">
                     Hesabınız yok mu? <span onClick={() => navigate('/register')} className="register-link">Kayıt olun</span>
                 </p>
