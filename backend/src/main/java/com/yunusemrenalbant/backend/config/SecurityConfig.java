@@ -59,7 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "api/auth/register",
                                 "api/auth/login",
-                                "/ws/**"
+                                "/ws/**",
+                                "/chat"
                         ).permitAll()
                         .requestMatchers("/app/**", "/topic/**").authenticated()
                         .anyRequest().authenticated()
