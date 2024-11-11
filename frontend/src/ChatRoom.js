@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './ChatRoom.css';
-import {Button} from "react-bootstrap";
+import { Button } from "react-bootstrap";
+
+const WS_URL = 'http://localhost:8080/ws';
+const API_CHAT_HISTORY = 'http://localhost:8080/chat';
+const API_LOGOUT = 'http://localhost:8080/api/auth/logout';
 
 function ChatRoom() {
     const [messages, setMessages] = useState([]);
@@ -10,15 +14,13 @@ function ChatRoom() {
     const [connecting, setConnecting] = useState(true);
     const stompClient = useRef(null);
     const messageAreaRef = useRef(null);
-
     const email = localStorage.getItem('email');
 
     useEffect(() => {
-        connect();
+        fetchChatHistory();
+        connectWebSocket();
 
-        return () => {
-            handleLeave();
-        };
+        return () => handleLeave();
     }, []);
 
     useEffect(() => {
@@ -27,8 +29,8 @@ function ChatRoom() {
         }
     }, [messages]);
 
-    useEffect(() => {
-        fetch("http://localhost:8080/chat", {
+    const fetchChatHistory = () => {
+        fetch(API_CHAT_HISTORY, {
             method: "GET",
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem("token")}`
@@ -37,29 +39,19 @@ function ChatRoom() {
             .then(response => response.json())
             .then(data => setMessages(data))
             .catch(error => console.error("Geçmiş mesajlar alınamadı:", error));
+    };
 
-        connect();
-    }, []);
-
-    const connect = () => {
-        const socket = new SockJS('http://localhost:8080/ws');
+    const connectWebSocket = () => {
+        const socket = new SockJS(WS_URL);
         stompClient.current = Stomp.over(socket);
         stompClient.current.connect({}, onConnected, onError);
     };
 
     const onConnected = () => {
-        if (stompClient.current && stompClient.current.connected) {
-            stompClient.current.subscribe('/topic/public', onMessageReceived);
+        stompClient.current.subscribe('/topic/public', onMessageReceived);
 
-            const token = localStorage.getItem('token');
-            stompClient.current.send    (
-                "/app/addUser",
-                { Authorization: `Bearer ${token}` },
-                JSON.stringify({ sender: email, type: 'JOIN' })
-            );
-
-            setConnecting(false);
-        }
+        sendJoinMessage();
+        setConnecting(false);
     };
 
     const onError = (error) => {
@@ -67,55 +59,54 @@ function ChatRoom() {
         setConnecting(true);
     };
 
+    const sendJoinMessage = () => {
+        const token = localStorage.getItem('token');
+        stompClient.current.send(
+            "/app/addUser",
+            { Authorization: `Bearer ${token}` },
+            JSON.stringify({ sender: email, type: 'JOIN' })
+        );
+    };
+
     const handleLeave = () => {
         const token = localStorage.getItem('token');
-        if (stompClient.current && stompClient.current.connected) {
-            console.log("Disconnected from WebSocket");
-
+        if (stompClient.current?.connected) {
             stompClient.current.send(
                 "/app/sendMessage",
                 { Authorization: `Bearer ${token}` },
                 JSON.stringify({ sender: email, type: 'LEAVE' })
             );
+            stompClient.current.disconnect(() => console.log("Disconnected from WebSocket"));
         }
     };
 
     const sendMessage = (e) => {
         e.preventDefault();
-        if (message.trim() && stompClient.current && stompClient.current.connected) {
-            const chatMessage = {
-                sender: email,
-                content: message,
-                type: 'CHAT',
-            };
+        if (!message.trim() || !stompClient.current?.connected) return;
 
-            const token = localStorage.getItem('token');
-            stompClient.current.send(
-                "/app/sendMessage",
-                { Authorization: `Bearer ${token}` },
-                JSON.stringify(chatMessage)
-            );
-            setMessage('');
-        }
+        const token = localStorage.getItem('token');
+        const chatMessage = { sender: email, content: message, type: 'CHAT' };
+
+        stompClient.current.send(
+            "/app/sendMessage",
+            { Authorization: `Bearer ${token}` },
+            JSON.stringify(chatMessage)
+        );
+        setMessage('');
     };
 
     const onMessageReceived = (payload) => {
-        const message = JSON.parse(payload.body);
-        setMessages((prevMessages) => [...prevMessages, message]);
+        const receivedMessage = JSON.parse(payload.body);
+        setMessages((prevMessages) => [...prevMessages, receivedMessage]);
     };
 
-    const formatDate = (time) => {
-        const date = new Date(time);
-        return date.toLocaleString();
-    };
+    const formatDate = (time) => new Date(time).toLocaleString();
 
     const handleLogout = async () => {
-        stompClient.current.disconnect(() => {
-            console.log("Disconnected from WebSocket");
-        });
+        stompClient.current?.disconnect(() => console.log("Disconnected from WebSocket"));
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/logout', {
+            const response = await fetch(API_LOGOUT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -144,8 +135,9 @@ function ChatRoom() {
                             <h2>Sohbet Odasına Hoş geldin</h2>
                         </div>
                         <div>
-                            <Button type={"button"} className={"btn btn-danger btn-sm"} onClick={handleLogout}>Cıkıs
-                                Yap</Button>
+                            <Button type="button" className="btn btn-danger btn-sm" onClick={handleLogout}>
+                                Çıkış Yap
+                            </Button>
                         </div>
                     </div>
 
@@ -157,11 +149,9 @@ function ChatRoom() {
                                 {msg.type === 'LEAVE' && <em>{msg.sender} left the chat</em>}
                                 {msg.type === 'CHAT' && (
                                     <span>
-                    <strong>{msg.sender}</strong>: {msg.content}
-                                        <div className="timestamp">
-                        {formatDate(msg.time)}
-                    </div>
-                </span>
+                                        <strong>{msg.sender}</strong>: {msg.content}
+                                        <div className="timestamp">{formatDate(msg.time)}</div>
+                                    </span>
                                 )}
                             </li>
                         ))}
