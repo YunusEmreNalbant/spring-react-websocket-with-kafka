@@ -27,6 +27,20 @@ function ChatRoom() {
         }
     }, [messages]);
 
+    useEffect(() => {
+        fetch("http://localhost:8080/chat", {
+            method: "GET",
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem("token")}`
+            }
+        })
+            .then(response => response.json())
+            .then(data => setMessages(data))
+            .catch(error => console.error("Geçmiş mesajlar alınamadı:", error));
+
+        connect();
+    }, []);
+
     const connect = () => {
         const socket = new SockJS('http://localhost:8080/ws');
         stompClient.current = Stomp.over(socket);
