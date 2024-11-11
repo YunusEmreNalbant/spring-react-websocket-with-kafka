@@ -24,7 +24,7 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/login" element={<LoginPage setToken={setToken} />} />
                 <Route
-                    path="/dashboard"
+                    path="/chat"
                     element={
                         <ProtectedRoute>
                             <ChatRoom />

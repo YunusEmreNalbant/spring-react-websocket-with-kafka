@@ -170,14 +170,14 @@ function ChatRoom() {
                         <div className="input-group clearfix">
                             <input
                                 type="text"
-                                placeholder="Type a message..."
+                                placeholder="Bir mesaj yazın..."
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 className="form-control"
                                 autoComplete="off"
                             />
                             <button type="submit" className="primary send-button">
-                                Send
+                                Gönder
                             </button>
                         </div>
                     </form>
