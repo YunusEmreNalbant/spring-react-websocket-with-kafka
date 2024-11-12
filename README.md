@@ -1,4 +1,4 @@
-# WebSocket Chat Uygulaması
+# Spring Boot, ReactJS, SockJS ve Kafka ile Anlık Chat Uygulaması
 
 Bu proje, kullanıcıların gerçek zamanlı mesajlaşmasını sağlamak için Spring Boot, ReactJS, WebSocket, SockJS ve Kafka kullanan bir chat uygulamasıdır. Uygulama, kullanıcıların birbirleriyle anında etkileşim kurmasına olanak tanıyan bir yapı sunar ve sağlam bir mesaj kuyruğu yönetimi için Kafka'yı kullanır.
 
