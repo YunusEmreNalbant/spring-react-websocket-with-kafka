@@ -8,7 +8,7 @@ function LoginPage({ setToken }) {
 
     useEffect(() => {
         if (localStorage.getItem('token')) {
-            navigate('/dashboard');
+            navigate('/chat');
         }
     }, [navigate]);
 
@@ -37,7 +37,7 @@ function LoginPage({ setToken }) {
                 localStorage.setItem('token', data.response.token);
                 localStorage.setItem('email', data.response.email);
 
-                navigate('/dashboard');
+                navigate('/chat');
             } else {
                 alert('Giriş başarısız! Bilgilerinizi kontrol edin.');
             }
