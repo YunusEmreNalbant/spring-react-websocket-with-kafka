@@ -24,7 +24,7 @@ Bu chat uygulaması, kullanıcılar arasında hızlı ve etkili iletişim kurmay
 
 Bu uygulama, istemci tarafında ReactJS ve WebSocket aracılığıyla sunucu ile iletişim kurar. Sunucu tarafında ise, Spring Boot ile bir WebSocket endpoint tanımlanmış ve Kafka kullanılarak mesaj kuyruğa alınarak güvenli bir iletim sağlanmıştır.
 
-1. **Mesaj İletişimi:** İstemciden gelen mesajlar WebSocket üzerinden sunucuya iletilir. Sunucuda bu mesajlar Kafka'ya iletilir ve belirlenen konular (topics) üzerinde işlenir.
+1. **Mesaj İletişimi:** İstemciden gelen mesajlar WebSocket üzerinden sunucuya iletilir. Sunucuda bu mesajlar Kafka'ya iletilir ve belirlenen topic (chat-global-topic) üzerinde işlenir.
 2. **Mesaj Yayını:** Kafka üzerinde işlenen mesajlar, sunucu tarafında ilgili kullanıcıya veya gruba geri bildirilir.
 3. **Kimlik Doğrulama:** Kullanıcılar, uygulamada işlem yapmadan önce JWT ile doğrulanır. Bu sayede sadece yetkili kullanıcılar chat özelliğini kullanabilir.
 4. **Geriye Dönüş Mekanizması (SockJS):** Eğer WebSocket bağlantısı desteklenmiyorsa SockJS devreye girerek uygulamanın uyumluluğunu artırır.
