@@ -40,6 +40,7 @@ public class ChatController {
     @SendTo("/topic/public")
     public void sendMessage(@Payload ChatMessage chatMessage) {
         if (chatMessage.getType() == MessageType.CHAT) {
+            log.info("Received message: {}", chatMessage);
             chatMessage.setTime(LocalDateTime.now());
             chatProducer.sendMessage(chatMessage);
         }
@@ -58,6 +59,7 @@ public class ChatController {
     @SendTo("/topic/public")
     public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         if (headerAccessor != null && headerAccessor.getSessionAttributes() != null) {
+            log.info("Received message: {}", chatMessage);
             headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
         } else {
             log.error("headerAccessor veya sessionAttributes null");
@@ -75,6 +77,7 @@ public class ChatController {
      */
     @GetMapping("/chat")
     public List<ChatMessage> getChatMessages() {
+        log.info("getChatMessages");
         return chatConsumer.getChatMessages();
     }
 }
