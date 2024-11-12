@@ -1,8 +1,8 @@
 spring:
   application:
-    name: spring-jwt-redis
+    name: spring-react-chat-app
   datasource:
-    url: jdbc:postgresql://localhost:5432/jwtredis
+    url: jdbc:postgresql://localhost:5432/chatapp
     username: root
     password: 123123123
     driver-class-name: org.postgresql.Driver
