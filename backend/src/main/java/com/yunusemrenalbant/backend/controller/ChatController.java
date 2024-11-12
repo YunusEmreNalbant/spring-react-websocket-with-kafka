@@ -28,6 +28,14 @@ public class ChatController {
         this.chatProducer = chatProducer;
     }
 
+    /**
+     * sendMessage metodu, "/sendMessage" adresine gönderilen mesajları dinler
+     * ve eğer mesaj türü CHAT ise mesajın gönderilme zamanını ayarlar ve
+     * mesajı Kafka aracılığıyla üretir. Mesajın tüm kullanıcılara dağıtılması
+     * için "/topic/public" kanalına gönderilir.
+     *
+     * @param chatMessage Gönderilen sohbet mesajı
+     */
     @MessageMapping("/sendMessage")
     @SendTo("/topic/public")
     public void sendMessage(@Payload ChatMessage chatMessage) {
@@ -37,21 +45,36 @@ public class ChatController {
         }
     }
 
+    /**
+     * addUser metodu, yeni bir kullanıcının sohbet sistemine katılmasını sağlar.
+     * Kullanıcı adı session'a eklenir ve mesaj Kafka aracılığıyla üretilir.
+     * Kullanıcının katıldığını tüm kullanıcılara bildirmek için "/topic/public"
+     * kanalına gönderilir.
+     *
+     * @param chatMessage Katılan kullanıcının bilgilerini içeren mesaj
+     * @param headerAccessor Session bilgilerini elde etmek için kullanılır
+     */
     @MessageMapping("/addUser")
     @SendTo("/topic/public")
     public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         if (headerAccessor != null && headerAccessor.getSessionAttributes() != null) {
             headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
         } else {
-            log.error("headerAccessor is null or sessionAttributes is null");
+            log.error("headerAccessor veya sessionAttributes null");
         }
 
         chatProducer.sendMessage(chatMessage);
     }
 
+    /**
+     * getChatMessages metodu, önceki sohbet mesajlarını almak için kullanılır.
+     * "/chat" GET isteği üzerine çalışır ve chatConsumer (kafka) üzerinden alınan
+     * mesaj listesini döner.
+     *
+     * @return Daha önce gönderilen sohbet mesajlarının listesi
+     */
     @GetMapping("/chat")
     public List<ChatMessage> getChatMessages() {
         return chatConsumer.getChatMessages();
     }
 }
-
